@@ -1,150 +1,42 @@
---// Interface: Monitor de FPS e Ping com Personalização de Cores \\--
--- Melhorando a experiência do usuário com animações e interação visual.
-
--- Configuração da Interface
 local ScreenGui = Instance.new("ScreenGui")
-local Fps = Instance.new("TextButton")
-local Ping = Instance.new("TextButton")
-local ColorMenu = Instance.new("Frame")
+local Fps = Instance.new("TextLabel")
+local Ping = Instance.new("TextLabel")
+local Timer = Instance.new("TextLabel")
 
--- Configuração do ScreenGui
 ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- Função para criar os botões de texto (FPS e Ping)
-local function createTextButton(name, position, text)
-    local button = Instance.new("TextButton")
-    button.Name = name
-    button.Parent = ScreenGui
-    button.BackgroundTransparency = 1 -- Fundo removido
-    button.Position = position
-    button.Size = UDim2.new(0, 100, 0, 30)
-    button.Font = Enum.Font.GothamBold
-    button.Text = text
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextSize = 14
-    button.TextScaled = false
-    button.BorderSizePixel = 2
-    button.BorderColor3 = Color3.fromRGB(255, 255, 255) -- Borda para dar mais ênfase
-    button.TextXAlignment = Enum.TextXAlignment.Center
-    button.TextYAlignment = Enum.TextYAlignment.Center
-
-    -- Efeito de hover (quando o mouse passa sobre o botão)
-    button.MouseEnter:Connect(function()
-        button.TextColor3 = Color3.fromRGB(255, 165, 0) -- Cor de destaque
-    end)
-    button.MouseLeave:Connect(function()
-        button.TextColor3 = Color3.fromRGB(255, 255, 255) -- Cor normal
-    end)
-
-    return button
+local function createTextLabel(name, position, text)
+    local label = Instance.new("TextLabel")
+    label.Name = name
+    label.Parent = ScreenGui
+    label.BackgroundTransparency = 1
+    label.Position = position
+    label.Size = UDim2.new(0, 80, 0, 25)
+    label.Font = Enum.Font.GothamBold
+    label.Text = text
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextSize = 10
+    label.TextScaled = false
+    label.TextXAlignment = Enum.TextXAlignment.Center
+    label.TextYAlignment = Enum.TextYAlignment.Center
+    return label
 end
 
--- Criação dos botões de FPS e Ping
-Fps = createTextButton("Fps", UDim2.new(0.5, -90, 1, -120), "FPS: 00")
-Ping = createTextButton("Ping", UDim2.new(0.5, 10, 1, -120), "PING: 00")
+local totalWidth = 80 * 3 + 5 * 2
+local startX = (ScreenGui.AbsoluteSize.X - totalWidth) / 2
 
--- Menu de seleção de cores
-ColorMenu.Name = "ColorMenu"
-ColorMenu.Parent = ScreenGui
-ColorMenu.Size = UDim2.new(0, 150, 0, 200)
-ColorMenu.Position = UDim2.new(0.5, -75, 0.5, -100)
-ColorMenu.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-ColorMenu.Visible = false
+Fps = createTextLabel("Fps", UDim2.new(0, startX, 1, -115), "FPS: 00")
+Timer = createTextLabel("Timer", UDim2.new(0, startX + 85, 1, -115), "TIMER: 00:00:00")
+Ping = createTextLabel("Ping", UDim2.new(0, startX + 170, 1, -115), "PING: 00")
 
--- Cores disponíveis para personalização
-local colors = {
-    {Name = "Red", Color = Color3.fromRGB(255, 0, 0)},
-    {Name = "Green", Color = Color3.fromRGB(0, 255, 0)},
-    {Name = "Blue", Color = Color3.fromRGB(0, 0, 255)},
-    {Name = "Purple", Color = Color3.fromRGB(128, 0, 128)},
-    {Name = "Yellow", Color = Color3.fromRGB(255, 255, 0)},
-    {Name = "Black", Color = Color3.fromRGB(0, 0, 0)},
-    {Name = "White", Color = Color3.fromRGB(255, 255, 255)},
-    {Name = "RGB", Color = nil} -- RGB como uma opção especial
-}
-
-local TargetLabel = nil
-local RGBLoops = {}
-
--- Função para criar botões no menu de cores
-local function createColorButton(colorData, index)
-    local button = Instance.new("TextButton")
-    button.Name = colorData.Name
-    button.Parent = ColorMenu
-    button.Size = UDim2.new(0, 120, 0, 25)
-    button.Position = UDim2.new(0, 15, 0, (index - 1) * 30 + 10)
-    button.BackgroundColor3 = colorData.Color or Color3.fromRGB(255, 255, 255)
-    button.Text = colorData.Name
-    button.TextColor3 = Color3.fromRGB(0, 0, 0)
-    button.Font = Enum.Font.GothamBold
-    button.TextSize = 12
-
-    -- Efeito de hover no menu de cores
-    button.MouseEnter:Connect(function()
-        button.TextColor3 = Color3.fromRGB(255, 165, 0)
-    end)
-    button.MouseLeave:Connect(function()
-        button.TextColor3 = Color3.fromRGB(0, 0, 0)
-    end)
-
-    -- Ação ao clicar no botão de cor
-    button.MouseButton1Click:Connect(function()
-        if TargetLabel then
-            if colorData.Name == "RGB" then
-                startRGB(TargetLabel)
-            else
-                stopRGB(TargetLabel)
-                TargetLabel.TextColor3 = colorData.Color
-            end
-        end
-        ColorMenu.Visible = false
-    end)
-
-    return button
-end
-
--- Funções para RGB
-local function stopRGB(label)
-    if RGBLoops[label] then
-        RGBLoops[label]:Disconnect()
-        RGBLoops[label] = nil
-    end
-end
-
-local function startRGB(label)
-    stopRGB(label)
-    RGBLoops[label] = game:GetService("RunService").RenderStepped:Connect(function()
-        label.TextColor3 = Color3.fromRGB(
-            math.random(0, 255),
-            math.random(0, 255),
-            math.random(0, 255)
-        )
-        wait(0.05) -- Transição mais suave
-    end)
-end
-
--- Criando os botões de cor no menu
-for i, colorData in ipairs(colors) do
-    createColorButton(colorData, i)
-end
-
--- Função para abrir o menu de cores ao clicar nos botões FPS ou Ping
-Fps.MouseButton1Click:Connect(function()
-    TargetLabel = Fps
-    ColorMenu.Visible = true
-end)
-
-Ping.MouseButton1Click:Connect(function()
-    TargetLabel = Ping
-    ColorMenu.Visible = true
-end)
-
--- Atualização de FPS e Ping
-local updateInterval, lastUpdateTime, fpsValue = 1, 0, 0
+local updateInterval = 1
+local lastUpdateTime = 0
+local fpsValue = 0
+local startTime = tick()
 
 local function updateFPS()
-    fpsValue = math.floor(1 / game:GetService("RunService").Heartbeat:Wait())
+    fpsValue = math.min(math.round(1 / game:GetService("RunService").Heartbeat:Wait()), 60)
     Fps.Text = string.format("FPS: %02d", fpsValue)
 end
 
@@ -153,11 +45,24 @@ local function updatePing()
     Ping.Text = string.format("PING: %02d", math.round(pingValue))
 end
 
--- Conectando a atualização contínua
+local function updateTimer()
+    local elapsedTime = tick() - startTime
+    local totalSeconds = math.floor(elapsedTime)
+    
+    local hours = math.min(math.floor(totalSeconds / 3600), 99)
+    local minutes = math.min(math.floor((totalSeconds % 3600) / 60), 59)
+    local seconds = math.min(totalSeconds % 60, 59)
+
+    Timer.Text = string.format("TIMER: %02d:%02d:%02d", hours, minutes, seconds)
+end
+
 game:GetService("RunService").Heartbeat:Connect(function()
-    if tick() - lastUpdateTime >= updateInterval then
+    local currentTime = tick()
+
+    if currentTime - lastUpdateTime >= updateInterval then
         updateFPS()
         updatePing()
-        lastUpdateTime = tick()
+        updateTimer()
+        lastUpdateTime = currentTime
     end
 end)
