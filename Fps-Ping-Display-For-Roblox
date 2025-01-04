@@ -56,6 +56,23 @@ local function updateTimer()
     Timer.Text = string.format("TIMER: %02d:%02d:%02d", hours, minutes, seconds)
 end
 
+-- Função para criar o efeito RGB suave
+local function smoothRGB(label)
+    spawn(function()
+        while true do
+            for i = 0, 1, 0.01 do
+                label.TextColor3 = Color3.fromHSV(i, 1, 1)
+                wait(0.02) -- Ajusta a velocidade da transição
+            end
+        end
+    end)
+end
+
+-- Aplicando o efeito RGB aos textos
+smoothRGB(Fps)
+smoothRGB(Ping)
+smoothRGB(Timer)
+
 game:GetService("RunService").Heartbeat:Connect(function()
     local currentTime = tick()
 
