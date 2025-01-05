@@ -129,13 +129,14 @@ FpsLabel.MouseButton1Click:Connect(toggleColorMenu)
 TimerLabel.MouseButton1Click:Connect(toggleColorMenu)
 PingLabel.MouseButton1Click:Connect(toggleColorMenu)
 
--- Atualizar FPS, Ping e Timer com uma única função de atualização
-RunService.RenderStepped:Connect(function(deltaTime)
-    -- Atualizar FPS
-    local fpsCounter = 0
-    local fpsElapsedTime = 0
-    local fpsUpdateRate = 1
+-- Variáveis para FPS
+local fpsCounter = 0
+local fpsElapsedTime = 0
+local fpsUpdateRate = 1
 
+-- Atualização de FPS, Ping e Timer
+RunService.Heartbeat:Connect(function(deltaTime)
+    -- Atualizar FPS
     fpsCounter = fpsCounter + 1
     fpsElapsedTime = fpsElapsedTime + deltaTime
     if fpsElapsedTime >= fpsUpdateRate then
