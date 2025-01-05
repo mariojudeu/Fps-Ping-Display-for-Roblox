@@ -1,85 +1,173 @@
 local ScreenGui = Instance.new("ScreenGui")
-local Fps = Instance.new("TextLabel")
-local Ping = Instance.new("TextLabel")
-local Timer = Instance.new("TextLabel")
+local FpsLabel, PingLabel, TimerLabel = Instance.new("TextButton"), Instance.new("TextButton"), Instance.new("TextButton")
+local RunService = game:GetService("RunService")
+local Stats = game:GetService("Stats")
+local startTime = tick()
+local rainbowActive = false
 
 ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-local function createTextLabel(name, position, text)
-    local label = Instance.new("TextLabel")
-    label.Name = name
-    label.Parent = ScreenGui
-    label.BackgroundTransparency = 1
-    label.Position = position
-    label.Size = UDim2.new(0, 80, 0, 25)
-    label.Font = Enum.Font.GothamBold
-    label.Text = text
-    label.TextColor3 = Color3.fromRGB(255, 255, 255)
-    label.TextSize = 10
-    label.TextScaled = false
-    label.TextXAlignment = Enum.TextXAlignment.Center
-    label.TextYAlignment = Enum.TextYAlignment.Center
-    return label
+-- Função para criar um TextButton
+local function createTextButton(name, position, text, fontSize)
+    local button = Instance.new("TextButton")
+    button.Name = name
+    button.Parent = ScreenGui
+    button.BackgroundTransparency = 1 -- Sem fundo
+    button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    button.Position = position
+    button.Size = UDim2.new(0, 80, 0, 25)
+    button.Font = Enum.Font.GothamBold
+    button.Text = text
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.TextSize = fontSize or 12
+    button.TextScaled = false
+    button.TextXAlignment = Enum.TextXAlignment.Center
+    button.TextYAlignment = Enum.TextYAlignment.Center
+    return button
 end
 
-local totalWidth = 80 * 3 + 5 * 2
-local startX = (ScreenGui.AbsoluteSize.X - totalWidth) / 2
+-- Cálculo do tamanho da tela e posição centralizada
+local screenWidth = game:GetService("Workspace").CurrentCamera.ViewportSize.X
+local totalWidth = 80 * 3 + 5 * 2 -- Largura total dos 3 textos (FPS, Timer e Ping) com as margens
+local startX = (screenWidth - totalWidth) / 2
 
-Fps = createTextLabel("Fps", UDim2.new(0, startX, 1, -115), "FPS: 00")
-Timer = createTextLabel("Timer", UDim2.new(0, startX + 85, 1, -115), "TIMER: 00:00:00")
-Ping = createTextLabel("Ping", UDim2.new(0, startX + 170, 1, -115), "PING: 00")
+-- Posições dos textos (centralizados corretamente)
+FpsLabel = createTextButton("Fps", UDim2.new(0, startX, 1, -116), "FPS: 00", 12)
+TimerLabel = createTextButton("Timer", UDim2.new(0, startX + 85, 1, -116), "TIMER: 00:00:00", 12)
+PingLabel = createTextButton("Ping", UDim2.new(0, startX + 170, 1, -116), "PING: 00", 12)
 
-local updateInterval = 1
-local lastUpdateTime = 0
-local fpsValue = 0
-local startTime = tick()
+-- Menu de cores
+local colorMenu = Instance.new("Frame")
+colorMenu.Size = UDim2.new(0, 400, 0, 120) -- Ajustado para 2 fileiras de 5 botões
+colorMenu.Position = UDim2.new(0, startX, 1, -225) -- Menu acima do texto
+colorMenu.BackgroundTransparency = 1 -- Sem fundo
+colorMenu.BorderSizePixel = 0
+colorMenu.Visible = false -- O menu começa invisível
+colorMenu.Parent = ScreenGui
 
-local function updateFPS()
-    fpsValue = math.min(math.round(1 / game:GetService("RunService").Heartbeat:Wait()), 60)
-    Fps.Text = string.format("FPS: %02d", fpsValue)
-end
+-- Criar botões de cores
+local colors = {
+    Color3.fromRGB(255, 0, 0),   -- Vermelho
+    Color3.fromRGB(0, 255, 0),   -- Verde
+    Color3.fromRGB(0, 0, 255),   -- Azul
+    Color3.fromRGB(255, 255, 0), -- Amarelo
+    Color3.fromRGB(255, 165, 0), -- Laranja
+    Color3.fromRGB(128, 0, 128), -- Roxo
+    Color3.fromRGB(255, 255, 255), -- Branco
+    Color3.fromRGB(0, 0, 0), -- Preto
+    Color3.fromRGB(255, 20, 147), -- Rosa forte
+}
 
-local function updatePing()
-    local pingValue = game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue() or 0
-    Ping.Text = string.format("PING: %02d", math.round(pingValue))
-end
+-- Função para criar os botões de cores
+local function createColorButton(color, position)
+    local colorButton = Instance.new("TextButton")
+    colorButton.BackgroundColor3 = color
+    colorButton.Text = ""
+    colorButton.Position = position
+    colorButton.Size = UDim2.new(0, 40, 0, 40) -- Botões menores
 
-local function updateTimer()
-    local elapsedTime = tick() - startTime
-    local totalSeconds = math.floor(elapsedTime)
-    
-    local hours = math.min(math.floor(totalSeconds / 3600), 99)
-    local minutes = math.min(math.floor((totalSeconds % 3600) / 60), 59)
-    local seconds = math.min(totalSeconds % 60, 59)
+    -- Tornar os botões redondos
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 20) -- Redondo
+    corner.Parent = colorButton
 
-    Timer.Text = string.format("TIMER: %02d:%02d:%02d", hours, minutes, seconds)
-end
-
--- Função para criar o efeito RGB suave
-local function smoothRGB(label)
-    spawn(function()
-        while true do
-            for i = 0, 1, 0.01 do
-                label.TextColor3 = Color3.fromHSV(i, 1, 1)
-                wait(0.02) -- Ajusta a velocidade da transição
-            end
-        end
+    colorButton.MouseButton1Click:Connect(function()
+        rainbowActive = false -- Desativa o arco-íris
+        FpsLabel.TextColor3 = color
+        TimerLabel.TextColor3 = color
+        PingLabel.TextColor3 = color
+        colorMenu.Visible = false
     end)
+    
+    colorButton.Parent = colorMenu
 end
 
--- Aplicando o efeito RGB aos textos
-smoothRGB(Fps)
-smoothRGB(Ping)
-smoothRGB(Timer)
+-- Organizar botões em 2 fileiras de 5 cores (não inclui o RGB como um botão separado)
+local offsetX = 0
+local offsetY = 0
 
-game:GetService("RunService").Heartbeat:Connect(function()
-    local currentTime = tick()
+-- Criar botões em 2 fileiras de 5 cores (não inclui o RGB como um botão separado)
+for i = 1, 9 do
+    local color = colors[i]
+    local position = UDim2.new(0, offsetX, 0, offsetY)
+    createColorButton(color, position)
 
-    if currentTime - lastUpdateTime >= updateInterval then
-        updateFPS()
-        updatePing()
-        updateTimer()
-        lastUpdateTime = currentTime
+    offsetX = offsetX + 50 -- Mover na horizontal
+    if i == 5 then
+        offsetX = 0 -- Mudar para a próxima linha
+        offsetY = 50 -- Mover para a próxima linha
+    end
+end
+
+-- Adicionar o botão RGB
+local rgbButton = Instance.new("TextButton")
+rgbButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- A cor RGB em si
+rgbButton.Text = "RGB"
+rgbButton.Position = UDim2.new(0, offsetX, 0, offsetY)
+rgbButton.Size = UDim2.new(0, 40, 0, 40)
+rgbButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+
+-- Tornar o botão RGB redondo
+local rgbCorner = Instance.new("UICorner")
+rgbCorner.CornerRadius = UDim.new(0, 20)
+rgbCorner.Parent = rgbButton
+
+rgbButton.MouseButton1Click:Connect(function()
+    rainbowActive = true
+    colorMenu.Visible = false
+end)
+
+rgbButton.Parent = colorMenu
+
+-- Alternar menu de cores
+local function toggleColorMenu()
+    colorMenu.Visible = not colorMenu.Visible
+end
+
+FpsLabel.MouseButton1Click:Connect(toggleColorMenu)
+TimerLabel.MouseButton1Click:Connect(toggleColorMenu)
+PingLabel.MouseButton1Click:Connect(toggleColorMenu)
+
+-- Atualizar FPS
+local fpsCounter = 0
+local elapsedTime = 0
+local fpsUpdateRate = 1
+
+RunService.Heartbeat:Connect(function(deltaTime)
+    fpsCounter = fpsCounter + 1
+    elapsedTime = elapsedTime + deltaTime
+    if elapsedTime >= fpsUpdateRate then
+        FpsLabel.Text = string.format("FPS: %02d", fpsCounter)
+        fpsCounter = 0
+        elapsedTime = 0
+    end
+end)
+
+-- Atualizar Ping
+RunService.RenderStepped:Connect(function()
+    local serverStats = Stats.Network.ServerStatsItem
+    local pingValue = serverStats and serverStats["Data Ping"]:GetValue() or 0
+    PingLabel.Text = string.format("PING: %02d", math.round(pingValue))
+end)
+
+-- Atualizar Timer
+RunService.RenderStepped:Connect(function()
+    local elapsedTime = tick() - startTime
+    local hours = math.floor(elapsedTime / 3600)
+    local minutes = math.floor((elapsedTime % 3600) / 60)
+    local seconds = math.floor(elapsedTime % 60)
+
+    TimerLabel.Text = string.format("TIMER: %02d:%02d:%02d", hours, minutes, seconds)
+end)
+
+-- Efeito de arco-íris RGB
+RunService.RenderStepped:Connect(function()
+    if rainbowActive then
+        -- Diminuir a velocidade da transição, por exemplo, multiplicando por 0.5
+        local time = tick() * 0.5 -- Ajuste para controlar a velocidade do arco-íris
+        FpsLabel.TextColor3 = Color3.fromHSV(time % 1, 1, 1)
+        TimerLabel.TextColor3 = Color3.fromHSV(time % 1, 1, 1)
+        PingLabel.TextColor3 = Color3.fromHSV(time % 1, 1, 1)
     end
 end)
