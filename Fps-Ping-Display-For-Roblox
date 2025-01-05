@@ -129,40 +129,41 @@ FpsLabel.MouseButton1Click:Connect(toggleColorMenu)
 TimerLabel.MouseButton1Click:Connect(toggleColorMenu)
 PingLabel.MouseButton1Click:Connect(toggleColorMenu)
 
--- Atualizar FPS
-local fpsCounter = 0
-local elapsedTime = 0
-local fpsUpdateRate = 1
+-- Atualizar FPS, Ping e Timer com uma única função de atualização
+RunService.RenderStepped:Connect(function(deltaTime)
+    -- Atualizar FPS
+    local fpsCounter = 0
+    local fpsElapsedTime = 0
+    local fpsUpdateRate = 1
 
-RunService.Heartbeat:Connect(function(deltaTime)
     fpsCounter = fpsCounter + 1
-    elapsedTime = elapsedTime + deltaTime
-    if elapsedTime >= fpsUpdateRate then
+    fpsElapsedTime = fpsElapsedTime + deltaTime
+    if fpsElapsedTime >= fpsUpdateRate then
         FpsLabel.Text = string.format("FPS: %02d", fpsCounter)
         fpsCounter = 0
-        elapsedTime = 0
+        fpsElapsedTime = 0
     end
-end)
 
--- Atualizar Ping
-RunService.RenderStepped:Connect(function()
+    -- Atualizar Ping
     local serverStats = Stats.Network.ServerStatsItem
-    local pingValue = serverStats and serverStats["Data Ping"]:GetValue() or 0
+    local pingValue = 0
+    if serverStats then
+        local pingStat = serverStats["Data Ping"]
+        if pingStat then
+            pingValue = pingStat:GetValue()
+        end
+    end
     PingLabel.Text = string.format("PING: %02d", math.round(pingValue))
-end)
 
--- Atualizar Timer
-RunService.RenderStepped:Connect(function()
-    local elapsedTime = tick() - startTime
-    local hours = math.floor(elapsedTime / 3600)
-    local minutes = math.floor((elapsedTime % 3600) / 60)
-    local seconds = math.floor(elapsedTime % 60)
+    -- Atualizar Timer
+    local elapsed = tick() - startTime
+    local hours = math.floor(elapsed / 3600)
+    local minutes = math.floor((elapsed % 3600) / 60)
+    local seconds = math.floor(elapsed % 60)
 
     TimerLabel.Text = string.format("TIMER: %02d:%02d:%02d", hours, minutes, seconds)
-end)
 
--- Efeito de arco-íris RGB
-RunService.RenderStepped:Connect(function()
+    -- Efeito de arco-íris RGB
     if rainbowActive then
         -- Diminuir a velocidade da transição, por exemplo, multiplicando por 0.5
         local time = tick() * 0.5 -- Ajuste para controlar a velocidade do arco-íris
