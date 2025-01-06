@@ -33,9 +33,9 @@ local totalWidth = 80 * 3 + 5 * 2 -- Largura total dos 3 textos (FPS, Timer e Pi
 local startX = (screenWidth - totalWidth) / 2
 
 -- Posições dos textos (centralizados corretamente)
-FpsLabel = createTextButton("Fps", UDim2.new(0, startX, 1, -116), "FPS: 00", 12)
-TimerLabel = createTextButton("Timer", UDim2.new(0, startX + 85, 1, -116), "TIMER: 00:00:00", 12)
-PingLabel = createTextButton("Ping", UDim2.new(0, startX + 170, 1, -116), "PING: 00", 12)
+FpsLabel = createTextButton("Fps", UDim2.new(0, startX, 1, -114), "FPS: 00", 12)
+TimerLabel = createTextButton("Timer", UDim2.new(0, startX + 85, 1, -114), "TIMER: 00:00:00", 12)
+PingLabel = createTextButton("Ping", UDim2.new(0, startX + 170, 1, -114), "PING: 00", 12)
 
 -- Menu de cores
 local colorMenu = Instance.new("Frame")
