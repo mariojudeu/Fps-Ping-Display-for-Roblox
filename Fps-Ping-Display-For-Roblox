@@ -3,7 +3,6 @@ local FpsLabel, PingLabel, TimerLabel = Instance.new("TextButton"), Instance.new
 local RunService = game:GetService("RunService")
 local Stats = game:GetService("Stats")
 local startTime = tick()
-local rainbowActive = false
 
 ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -17,9 +16,9 @@ local function createTextButton(name, position, text, fontSize)
     button.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     button.Position = position
     button.Size = UDim2.new(0, 80, 0, 25)
-    button.Font = Enum.Font.GothamBold
+    button.Font = Enum.Font.GothamBold -- Fonte GothamBold aplicada
     button.Text = text
-    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.TextColor3 = Color3.fromRGB(255, 255, 255) -- Texto branco
     button.TextSize = fontSize or 12
     button.TextScaled = false
     button.TextXAlignment = Enum.TextXAlignment.Center
@@ -36,98 +35,6 @@ local startX = (screenWidth - totalWidth) / 2
 FpsLabel = createTextButton("Fps", UDim2.new(0, startX, 1, -114), "FPS: 00", 12)
 TimerLabel = createTextButton("Timer", UDim2.new(0, startX + 85, 1, -114), "TIMER: 00:00:00", 12)
 PingLabel = createTextButton("Ping", UDim2.new(0, startX + 170, 1, -114), "PING: 00", 12)
-
--- Menu de cores
-local colorMenu = Instance.new("Frame")
-colorMenu.Size = UDim2.new(0, 400, 0, 120) -- Ajustado para 2 fileiras de 5 botões
-colorMenu.Position = UDim2.new(0, startX, 1, -225) -- Menu acima do texto
-colorMenu.BackgroundTransparency = 1 -- Sem fundo
-colorMenu.BorderSizePixel = 0
-colorMenu.Visible = false -- O menu começa invisível
-colorMenu.Parent = ScreenGui
-
--- Criar botões de cores
-local colors = {
-    Color3.fromRGB(255, 0, 0),   -- Vermelho
-    Color3.fromRGB(0, 255, 0),   -- Verde
-    Color3.fromRGB(0, 0, 255),   -- Azul
-    Color3.fromRGB(255, 255, 0), -- Amarelo
-    Color3.fromRGB(255, 165, 0), -- Laranja
-    Color3.fromRGB(128, 0, 128), -- Roxo
-    Color3.fromRGB(255, 255, 255), -- Branco
-    Color3.fromRGB(0, 0, 0), -- Preto
-    Color3.fromRGB(255, 20, 147), -- Rosa forte
-}
-
--- Função para criar os botões de cores
-local function createColorButton(color, position)
-    local colorButton = Instance.new("TextButton")
-    colorButton.BackgroundColor3 = color
-    colorButton.Text = ""
-    colorButton.Position = position
-    colorButton.Size = UDim2.new(0, 40, 0, 40) -- Botões menores
-
-    -- Tornar os botões redondos
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 20) -- Redondo
-    corner.Parent = colorButton
-
-    colorButton.MouseButton1Click:Connect(function()
-        rainbowActive = false -- Desativa o arco-íris
-        FpsLabel.TextColor3 = color
-        TimerLabel.TextColor3 = color
-        PingLabel.TextColor3 = color
-        colorMenu.Visible = false
-    end)
-    
-    colorButton.Parent = colorMenu
-end
-
--- Organizar botões em 2 fileiras de 5 cores (não inclui o RGB como um botão separado)
-local offsetX = 0
-local offsetY = 0
-
--- Criar botões em 2 fileiras de 5 cores (não inclui o RGB como um botão separado)
-for i = 1, 9 do
-    local color = colors[i]
-    local position = UDim2.new(0, offsetX, 0, offsetY)
-    createColorButton(color, position)
-
-    offsetX = offsetX + 50 -- Mover na horizontal
-    if i == 5 then
-        offsetX = 0 -- Mudar para a próxima linha
-        offsetY = 50 -- Mover para a próxima linha
-    end
-end
-
--- Adicionar o botão RGB
-local rgbButton = Instance.new("TextButton")
-rgbButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- A cor RGB em si
-rgbButton.Text = "RGB"
-rgbButton.Position = UDim2.new(0, offsetX, 0, offsetY)
-rgbButton.Size = UDim2.new(0, 40, 0, 40)
-rgbButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-
--- Tornar o botão RGB redondo
-local rgbCorner = Instance.new("UICorner")
-rgbCorner.CornerRadius = UDim.new(0, 20)
-rgbCorner.Parent = rgbButton
-
-rgbButton.MouseButton1Click:Connect(function()
-    rainbowActive = true
-    colorMenu.Visible = false
-end)
-
-rgbButton.Parent = colorMenu
-
--- Alternar menu de cores
-local function toggleColorMenu()
-    colorMenu.Visible = not colorMenu.Visible
-end
-
-FpsLabel.MouseButton1Click:Connect(toggleColorMenu)
-TimerLabel.MouseButton1Click:Connect(toggleColorMenu)
-PingLabel.MouseButton1Click:Connect(toggleColorMenu)
 
 -- Variáveis para FPS
 local fpsCounter = 0
@@ -163,13 +70,4 @@ RunService.Heartbeat:Connect(function(deltaTime)
     local seconds = math.floor(elapsed % 60)
 
     TimerLabel.Text = string.format("TIMER: %02d:%02d:%02d", hours, minutes, seconds)
-
-    -- Efeito de arco-íris RGB
-    if rainbowActive then
-        -- Diminuir a velocidade da transição, por exemplo, multiplicando por 0.5
-        local time = tick() * 0.5 -- Ajuste para controlar a velocidade do arco-íris
-        FpsLabel.TextColor3 = Color3.fromHSV(time % 1, 1, 1)
-        TimerLabel.TextColor3 = Color3.fromHSV(time % 1, 1, 1)
-        PingLabel.TextColor3 = Color3.fromHSV(time % 1, 1, 1)
-    end
 end)
